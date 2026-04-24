@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link'; 
 
 export default function Kayit() {
   const router = useRouter();
@@ -32,7 +33,14 @@ export default function Kayit() {
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'sans-serif' }}>
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '300px', padding: '30px', border: '1px solid #ddd', borderRadius: '10px' }}>
-        <h2 style={{ textAlign: 'center', marginBottom: '10px' }}>Kayıt Ol</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+  <h2>Kayıt Ol</h2>
+  <Link href="/">
+    <button style={{ padding: '8px 16px', background: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+      🏠 Ana Sayfa
+    </button>
+  </Link>
+</div>
         
         {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
         

@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 export default function IsVer() {
   const { data: session, status } = useSession();
@@ -66,7 +67,14 @@ export default function IsVer() {
 
   return (
     <div style={{ maxWidth: '600px', margin: '50px auto', padding: '20px', fontFamily: 'sans-serif' }}>
-      <h1>📝 İş Ver</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+  <h1>📝 İş Ver</h1>
+  <Link href="/">
+    <button style={{ padding: '8px 16px', background: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+      🏠 Ana Sayfa
+    </button>
+  </Link>
+</div>
       {message && <p style={{ color: message.includes('✅') ? 'green' : 'red' }}>{message}</p>}
       
       <form onSubmit={handleSubmit}>
