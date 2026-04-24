@@ -15,21 +15,13 @@ interface Job {
   customer: { name: string; email: string };
 }
 
-interface OfferPrices {
-  [key: string]: string;
-}
-
-interface OfferMessages {
-  [key: string]: string;
-}
-
 export default function Isler() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
-  const [offerPrice, setOfferPrice] = useState<OfferPrices>({});
-  const [offerMessage, setOfferMessage] = useState<OfferMessages>({});
+  const [offerPrice, setOfferPrice] = useState<Record<string, string>>({});
+  const [offerMessage, setOfferMessage] = useState<Record<string, string>>({});
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -37,6 +29,10 @@ export default function Isler() {
       .then(res => res.json())
       .then(data => {
         setJobs(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
         setLoading(false);
       });
   }, []);
@@ -74,7 +70,7 @@ export default function Isler() {
       setTimeout(() => setMessage(''), 3000);
     } else {
       const data = await res.json();
-      setMessage(`❌ ${data.error}`);
+      setMessage(`❌ ${data.error || 'Teklif gönderilemedi'}`);
     }
   };
 
@@ -101,17 +97,19 @@ export default function Isler() {
                 type="number" 
                 placeholder="Fiyat (₺)" 
                 value={offerPrice[job.id] || ''}
-                onChange={e => setOfferPrice({ ...offerPrice, [job.id]: e.target.value })}
+                onChange={(e) => setOfferPrice(prev => ({ ...prev, [job.id]: e.target.value }))}
                 style={{ padding: '8px', marginRight: '10px', width: '150px' }}
               />
               <input 
                 type="text" 
                 placeholder="Mesajınız" 
                 value={offerMessage[job.id] || ''}
-                onChange={e => setOfferMessage({ ...offerMessage, [job.id]: e.target.value })}
+                onChange={(e) => setOfferMessage(prev => ({ ...prev, [job.id]: e.target.value }))}
                 style={{ padding: '8px', marginRight: '10px', width: '250px' }}
               />
-              <button onClick={() => handleTeklifVer(job.id)} style={{ padding: '8px 16px', background: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+              <button 
+                onClick={() => handleTeklifVer(job.id)} 
+                style={{ padding: '8px 16px', background: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
                 Teklif Ver
               </button>
             </div>
