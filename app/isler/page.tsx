@@ -4,13 +4,32 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
+interface Job {
+  id: string;
+  title: string;
+  description: string;
+  city: string;
+  district: string;
+  budget: number | null;
+  category: { icon: string; name: string };
+  customer: { name: string; email: string };
+}
+
+interface OfferPrices {
+  [key: string]: string;
+}
+
+interface OfferMessages {
+  [key: string]: string;
+}
+
 export default function Isler() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [jobs, setJobs] = useState([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
-  const [offerPrice, setOfferPrice] = useState({});
-  const [offerMessage, setOfferMessage] = useState({});
+  const [offerPrice, setOfferPrice] = useState<OfferPrices>({});
+  const [offerMessage, setOfferMessage] = useState<OfferMessages>({});
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -29,18 +48,29 @@ export default function Isler() {
   }
 
   const handleTeklifVer = async (jobId: string) => {
+    const price = offerPrice[jobId];
+    const msg = offerMessage[jobId];
+
+    if (!price || !msg) {
+      setMessage('❌ Lütfen fiyat ve mesaj girin');
+      setTimeout(() => setMessage(''), 3000);
+      return;
+    }
+
     const res = await fetch('/api/offers', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         jobId,
-        price: parseFloat(offerPrice[jobId] || 0),
-        message: offerMessage[jobId] || '',
+        price: parseFloat(price),
+        message: msg,
       }),
     });
 
     if (res.ok) {
       setMessage('✅ Teklifiniz gönderildi!');
+      setOfferPrice({ ...offerPrice, [jobId]: '' });
+      setOfferMessage({ ...offerMessage, [jobId]: '' });
       setTimeout(() => setMessage(''), 3000);
     } else {
       const data = await res.json();
@@ -55,7 +85,7 @@ export default function Isler() {
       
       {jobs.length === 0 && <p>Henüz açık iş bulunmuyor.</p>}
       
-      {jobs.map((job: any) => (
+      {jobs.map((job) => (
         <div key={job.id} style={{ border: '1px solid #ddd', borderRadius: '10px', padding: '15px', marginBottom: '20px', background: '#f9f9f9' }}>
           <h3>{job.title}</h3>
           <p>{job.description}</p>
@@ -64,7 +94,7 @@ export default function Isler() {
           <p><strong>📂 Kategori:</strong> {job.category?.icon} {job.category?.name}</p>
           <p><strong>👤 İlan Sahibi:</strong> {job.customer?.name}</p>
           
-          {session.user.role === 'PROVIDER' && (
+          {session.user?.role === 'PROVIDER' && (
             <div style={{ marginTop: '15px', borderTop: '1px solid #ccc', paddingTop: '15px' }}>
               <h4>Teklif Ver</h4>
               <input 
