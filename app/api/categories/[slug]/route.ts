@@ -1,26 +1,34 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import { Pool } from 'pg';
-import { PrismaPg } from '@prisma/adapter-pg';
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
 
 export async function GET(
   request: Request,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
+    // params bir Promise, await ile aç
+    const { slug } = await params;
+    
+    // Dinamik import ile Prisma modüllerini al (Edge runtime için)
+    const { PrismaClient } = await import('@prisma/client');
+    const { Pool } = await import('pg');
+    const { PrismaPg } = await import('@prisma/adapter-pg');
+
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+    });
+
+    const adapter = new PrismaPg(pool);
+    const prisma = new PrismaClient({ adapter });
+
     const category = await prisma.category.findUnique({
-      where: { slug: params.slug },
+      where: { slug: slug },
     });
 
     if (!category) {
-      return NextResponse.json({ error: 'Kategori bulunamadı' }, { status: 404 });
+      return NextResponse.json(
+        { error: `Kategori bulunamadı: ${slug}` },
+        { status: 404 }
+      );
     }
 
     const jobs = await prisma.job.findMany({
@@ -37,7 +45,11 @@ export async function GET(
     });
 
     return NextResponse.json({ category, jobs });
-  } catch (error) {
-    return NextResponse.json({ error: 'Bir hata oluştu' }, { status: 500 });
+  } catch (error: any) {
+    console.error('API hatası:', error);
+    return NextResponse.json(
+      { error: error.message || 'Bir hata oluştu' },
+      { status: 500 }
+    );
   }
 }

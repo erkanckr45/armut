@@ -1,7 +1,6 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
@@ -16,19 +15,28 @@ interface Job {
   createdAt: string;
 }
 
-export default function KategoriSayfasi() {
-  const { slug } = useParams();
+export default function KategoriSayfasi({ params }: { params: Promise<{ slug: string }> }) {
+  const [slug, setSlug] = useState<string | null>(null);
   const { data: session } = useSession();
   const [category, setCategory] = useState<any>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // params Promise'ini çöz
+    params.then((resolved) => {
+      setSlug(resolved.slug);
+    });
+  }, [params]);
+
+  useEffect(() => {
+    if (!slug) return;
+    
     fetch(`/api/categories/${slug}`)
       .then(res => res.json())
       .then(data => {
         setCategory(data.category);
-        setJobs(data.jobs);
+        setJobs(data.jobs || []);
         setLoading(false);
       })
       .catch(err => {
@@ -38,7 +46,7 @@ export default function KategoriSayfasi() {
   }, [slug]);
 
   if (loading) return <div style={{ textAlign: 'center', padding: '50px' }}>Yükleniyor...</div>;
-  if (!category) return <div>Kategori bulunamadı</div>;
+  if (!category) return <div>Kategori bulunamadı: {slug}</div>;
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px', fontFamily: 'sans-serif' }}>

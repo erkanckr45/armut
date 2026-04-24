@@ -100,6 +100,7 @@ export default function Home() {
               }}>
                 <div style={{ fontSize: '40px', marginBottom: '10px' }}>{cat.icon || '📦'}</div>
                 <div style={{ fontWeight: '500', color: '#333' }}>{cat.name}</div>
+                <div style={{ fontSize: '12px', color: 'gray', marginTop: '5px' }}>slug: {cat.slug}</div>
               </div>
             </Link>
           ))}
