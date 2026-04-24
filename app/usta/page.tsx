@@ -3,7 +3,6 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import Link from 'next/link';
 
 export default function Usta() {
   const { data: session, status } = useSession();
@@ -36,14 +35,7 @@ export default function Usta() {
 
   return (
     <div style={{ maxWidth: '600px', margin: '50px auto', padding: '20px', fontFamily: 'sans-serif', textAlign: 'center' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-  <h1>🛠️ Hizmet Veren Ol</h1>
-  <Link href="/">
-    <button style={{ padding: '8px 16px', background: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-      🏠 Ana Sayfa
-    </button>
-  </Link>
-</div>
+      <h1>🛠️ Hizmet Veren Ol</h1>
       <p>Hizmet vermek için usta olarak kaydolun.</p>
       
       {message && <p style={{ color: message.includes('✅') ? 'green' : 'red' }}>{message}</p>}

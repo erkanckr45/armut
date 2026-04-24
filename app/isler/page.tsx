@@ -2,7 +2,6 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
 interface Job {
@@ -30,10 +29,6 @@ export default function Isler() {
       .then(res => res.json())
       .then(data => {
         setJobs(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
         setLoading(false);
       });
   }, []);
@@ -77,14 +72,7 @@ export default function Isler() {
 
   return (
     <div style={{ maxWidth: '800px', margin: '50px auto', padding: '20px', fontFamily: 'sans-serif' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-  <h1>📋 Açık İşler</h1>
-  <Link href="/">
-    <button style={{ padding: '8px 16px', background: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-      🏠 Ana Sayfa
-    </button>
-  </Link>
-</div>
+      <h1>📋 Açık İşler</h1>
       {message && <p style={{ color: message.includes('✅') ? 'green' : 'red' }}>{message}</p>}
       
       {jobs.length === 0 && <p>Henüz açık iş bulunmuyor.</p>}
