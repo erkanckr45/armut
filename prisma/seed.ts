@@ -1,14 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 
-const DATABASE_URL = "postgresql://neondb_owner:npg_sbjQ7c2ThyfV@ep-autumn-bonus-amd88j7g-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require"
-
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: DATABASE_URL,
-    },
-  },
-})
+const prisma = new PrismaClient()
 
 const categories = [
   { name: "Ev Temizliği", slug: "ev-temizligi", icon: "🧹" },
