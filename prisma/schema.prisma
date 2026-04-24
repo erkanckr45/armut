@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum Role {
@@ -13,12 +12,104 @@ enum Role {
   ADMIN
 }
 
+enum JobStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
 model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  password  String
-  role      Role     @default(CUSTOMER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  password      String
+  phone         String?
+  role          Role      @default(CUSTOMER)
+  image         String?
+  bio           String?
+  workingAreas  String[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  jobs          Job[]
+  offers        Offer[]
+  sentMessages  Message[] @relation("Sender")
+  receivedMessages Message[] @relation("Receiver")
+  reviewsGiven  Review[]  @relation("Reviewer")
+  reviewsReceived Review[] @relation("Reviewed")
+}
+
+model Category {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  slug        String      @unique
+  icon        String?
+  parentId    String?
+  parent      Category?   @relation("CategoryToCategory", fields: [parentId], references: [id])
+  children    Category[]  @relation("CategoryToCategory")
+  jobs        Job[]
+  createdAt   DateTime    @default(now())
+}
+
+model Job {
+  id            String      @id @default(cuid())
+  title         String
+  description   String
+  address       String
+  city          String
+  district      String
+  preferredDate DateTime?
+  budget        Float?
+  status        JobStatus   @default(OPEN)
+  customerId    String
+  customer      User        @relation(fields: [customerId], references: [id])
+  categoryId    String
+  category      Category    @relation(fields: [categoryId], references: [id])
+  offers        Offer[]
+  createdAt     DateTime    @default(now())
+  expiresAt     DateTime
+}
+
+model Offer {
+  id          String      @id @default(cuid())
+  price       Float
+  message     String
+  status      OfferStatus @default(PENDING)
+  jobId       String
+  job         Job         @relation(fields: [jobId], references: [id])
+  providerId  String
+  provider    User        @relation(fields: [providerId], references: [id])
+  createdAt   DateTime    @default(now())
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  content     String
+  isRead      Boolean  @default(false)
+  senderId    String
+  sender      User     @relation("Sender", fields: [senderId], references: [id])
+  receiverId  String
+  receiver    User     @relation("Receiver", fields: [receiverId], references: [id])
+  jobId       String
+  createdAt   DateTime @default(now())
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  rating      Int
+  comment     String?
+  jobId       String   @unique
+  reviewerId  String
+  reviewer    User     @relation("Reviewer", fields: [reviewerId], references: [id])
+  reviewedId  String
+  reviewed    User     @relation("Reviewed", fields: [reviewedId], references: [id])
+  createdAt   DateTime @default(now())
 }
