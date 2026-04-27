@@ -102,11 +102,11 @@ export default function Tekliflerim() {
           {offer.status === 'ACCEPTED' && (
             <div>
               <p style={{ color: 'green', marginTop: '10px' }}>✅ Bu teklif kabul edildi. Artık mesajlaşabilirsiniz.</p>
-              <Link href="/isler">
-                <button style={{ marginTop: '10px', padding: '8px 16px', background: '#17a2b8', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-                  💬 Mesaj Gönder
-                </button>
-              </Link>
+              <Link href={`/mesajlar/${offer.job.id}`}>
+  <button style={{ marginTop: '10px', padding: '8px 16px', background: '#17a2b8', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+    💬 Mesaj Gönder
+  </button>
+</Link>
             </div>
           )}
           
