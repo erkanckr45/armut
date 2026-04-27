@@ -1,32 +1,14 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter }next/navigation';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-
-interface Offer {
-  id: string;
-  price: number;
-  message: string;
-  status: string;
-  job: {
-    id: string;
-    title: string;
-    description: string;
-  };
-  provider?: {
-    id: string;
-    name: string;
-    email: string;
-  };
-  createdAt: string;
-}
 
 export default function Tekliflerim() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [offers, setOffers] = useState<Offer[]>([]);
+  const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
 
@@ -34,11 +16,28 @@ export default function Tekliflerim() {
     fetch('/api/offers/my')
       .then(res => res.json())
       .then(data => {
-        setOffers(data);
+        console.log('Gelen veri:', data);
+        
+        let teklifler = [];
+        
+        if (data.jobs && Array.isArray(data.jobs)) {
+          // Her işin içindeki teklifleri topla
+          teklifler = data.jobs.flatMap((job: any) => 
+            (job.offers || []).map((offer: any) => ({
+              ...offer,
+              job: { id: job.id, title: job.title, description: job.description }
+            }))
+          );
+        } else if (Array.isArray(data)) {
+          teklifler = data;
+        }
+        
+        setOffers(teklifler);
         setLoading(false);
       })
       .catch(err => {
-        console.error(err);
+        console.error('Hata:', err);
+        setOffers([]);
         setLoading(false);
       });
   }, []);
@@ -83,10 +82,10 @@ export default function Tekliflerim() {
       
       {offers.length === 0 && <p>Henüz teklif bulunmuyor.</p>}
       
-      {offers.map((offer) => (
+      {offers.map((offer: any) => (
         <div key={offer.id} style={{ border: '1px solid #ddd', borderRadius: '10px', padding: '15px', marginBottom: '20px', background: '#f9f9f9' }}>
-          <h3>{offer.job.title}</h3>
-          <p>{offer.job.description}</p>
+          <h3>{offer.job?.title || 'İş bulunamadı'}</h3>
+          <p>{offer.job?.description || ''}</p>
           <p><strong>💰 Teklif Fiyatı:</strong> {offer.price} TL</p>
           <p><strong>💬 Mesaj:</strong> {offer.message}</p>
           
