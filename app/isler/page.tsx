@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import MessageModal from '../components/MessageModal';
 
 interface Job {
@@ -12,6 +13,7 @@ interface Job {
   city: string;
   district: string;
   budget: number | null;
+  status: string;
   category: { icon: string; name: string };
   customer: { id: string; name: string; email: string };
 }
@@ -32,14 +34,12 @@ export default function Isler() {
       .then(data => {
         setJobs(data);
         setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
       });
   }, []);
-
-  if (status === 'loading' || loading) return <div>Yükleniyor...</div>;
-  if (!session) {
-    router.push('/giris');
-    return null;
-  }
 
   const handleTeklifVer = async (jobId: string) => {
     const price = offerPrice[jobId];
@@ -73,17 +73,48 @@ export default function Isler() {
     }
   };
 
+  const handleCompleteJob = async (jobId: string) => {
+    if (!confirm('İşi tamamladığınızdan emin misiniz? Ustayı değerlendirebileceksiniz.')) return;
+    
+    const res = await fetch('/api/jobs/complete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jobId }),
+    });
+    
+    if (res.ok) {
+      alert('✅ İş tamamlandı! Ustayı değerlendirebilirsiniz.');
+      router.push(`/degerlendir/${jobId}`);
+    } else {
+      alert('❌ Bir hata oluştu');
+    }
+  };
+
   const isOwnJob = (job: Job) => {
-    return job.customer?.email === session.user?.email;
+    return job.customer?.email === session?.user?.email;
   };
 
   const isProvider = () => {
-    return session.user?.role === 'PROVIDER';
+    return session?.user?.role === 'PROVIDER';
   };
+
+  if (status === 'loading' || loading) return <div>Yükleniyor...</div>;
+  if (!session) {
+    router.push('/giris');
+    return null;
+  }
 
   return (
     <div style={{ maxWidth: '800px', margin: '50px auto', padding: '20px', fontFamily: 'sans-serif' }}>
-      <h1>📋 Açık İşler</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h1>📋 Açık İşler</h1>
+        <Link href="/">
+          <button style={{ padding: '8px 16px', background: '#6c757d', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+            🏠 Ana Sayfa
+          </button>
+        </Link>
+      </div>
+      
       {message && <p style={{ color: message.includes('✅') ? 'green' : 'red' }}>{message}</p>}
       
       {jobs.length === 0 && <p>Henüz açık iş bulunmuyor.</p>}
@@ -96,9 +127,20 @@ export default function Isler() {
           <p><strong>💰 Bütçe:</strong> {job.budget ? `${job.budget} TL` : 'Belirtilmemiş'}</p>
           <p><strong>📂 Kategori:</strong> {job.category?.icon} {job.category?.name}</p>
           <p><strong>👤 İlan Sahibi:</strong> {job.customer?.name}</p>
+          <p><strong>📌 Durum:</strong> {job.status === 'OPEN' ? 'Açık' : job.status === 'IN_PROGRESS' ? 'Devam Ediyor' : 'Tamamlandı'}</p>
+          
+          {/* İşi Tamamla Butonu (Sadece Müşteri ve iş IN_PROGRESS ise) */}
+          {!isProvider() && job.status === 'IN_PROGRESS' && (
+            <button 
+              onClick={() => handleCompleteJob(job.id)}
+              style={{ marginTop: '10px', padding: '8px 16px', background: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', marginRight: '10px' }}
+            >
+              ✅ İşi Tamamla
+            </button>
+          )}
           
           {/* Teklif Verme Bölümü - Sadece Ustalar için ve kendi işi DEĞİLSE */}
-          {isProvider() && !isOwnJob(job) && (
+          {isProvider() && !isOwnJob(job) && job.status === 'OPEN' && (
             <div style={{ marginTop: '15px', borderTop: '1px solid #ccc', paddingTop: '15px' }}>
               <h4>📝 Teklif Ver</h4>
               <input 
@@ -123,8 +165,8 @@ export default function Isler() {
             </div>
           )}
 
-          {/* Mesajlaşma Butonu - Sadece başkasının işinde göster */}
-          {!isOwnJob(job) && (
+          {/* Mesajlaşma Butonu - Sadece başkasının işinde veya devam eden işte göster */}
+          {(!isOwnJob(job) || job.status === 'IN_PROGRESS') && (
             <div style={{ marginTop: '15px', textAlign: 'right' }}>
               <button
                 onClick={() => setSelectedJobId(job.id)}
