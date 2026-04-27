@@ -8,36 +8,47 @@ export default function NotificationBell() {
   const { data: session } = useSession();
   const [unreadCount, setUnreadCount] = useState(0);
 
-  useEffect(() => {
+  const fetchUnreadCount = async () => {
     if (!session) return;
-
-    const fetchUnreadCount = async () => {
+    try {
       const res = await fetch('/api/messages/unread-count');
       const data = await res.json();
-      setUnreadCount(data.count);
-    };
+      setUnreadCount(data.count || 0);
+    } catch (err) {
+      console.error('Bildirim hatası:', err);
+    }
+  };
 
+  useEffect(() => {
     fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 10000); // 10 saniyede bir kontrol et
+    const interval = setInterval(fetchUnreadCount, 5000);
     return () => clearInterval(interval);
   }, [session]);
 
-  if (!session || unreadCount === 0) return null;
+  if (!session) return null;
 
   return (
-    <Link href="/mesajlarim" style={{ position: 'relative', marginRight: '15px', textDecoration: 'none' }}>
-      <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', position: 'relative' }}>
+    <Link href="/mesajlarim" style={{ position: 'relative', marginRight: '15px', textDecoration: 'none', display: 'inline-block' }}>
+      <button style={{
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        fontSize: '24px',
+        position: 'relative',
+        padding: '5px 10px'
+      }}>
         💬
         {unreadCount > 0 && (
           <span style={{
             position: 'absolute',
-            top: '-5px',
-            right: '-10px',
-            background: 'red',
+            top: '-8px',
+            right: '-8px',
+            background: '#dc3545',
             color: 'white',
             borderRadius: '50%',
-            padding: '2px 6px',
-            fontSize: '12px'
+            padding: '2px 8px',
+            fontSize: '12px',
+            fontWeight: 'bold'
           }}>
             {unreadCount}
           </span>
