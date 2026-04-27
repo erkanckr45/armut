@@ -11,9 +11,10 @@ export default function Mesajlasma() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const [sending, setSending] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // MESAJLARI YÜKLE
   const fetchMessages = async () => {
     try {
       const res = await fetch(`/api/messages?jobId=${jobId}`);
@@ -34,22 +35,23 @@ export default function Mesajlasma() {
     }
   };
 
+  // HER 3 SANİYEDE BİR OTOMATİK YENİLE
   useEffect(() => {
     if (!jobId) return;
-    
     fetchMessages();
-    const interval = setInterval(fetchMessages, 3000); // 3 saniyede bir yenile
+    const interval = setInterval(fetchMessages, 3000);
     return () => clearInterval(interval);
   }, [jobId]);
 
+  // YENİ MESAJ GELİNCE AŞAĞI KAYDIR
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     setLoading(false);
   }, [messages]);
 
+  // MESAJ GÖNDER
   const sendMessage = async () => {
     if (!newMessage.trim() || sending) return;
-    
     setSending(true);
     try {
       const res = await fetch('/api/messages', {
@@ -57,7 +59,6 @@ export default function Mesajlasma() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ jobId, content: newMessage }),
       });
-
       if (res.ok) {
         setNewMessage('');
         await fetchMessages();
@@ -66,7 +67,7 @@ export default function Mesajlasma() {
         alert(data.error || 'Mesaj gönderilemedi');
       }
     } catch (err) {
-      console.error('Mesaj gönderme hatası:', err);
+      console.error('Hata:', err);
     } finally {
       setSending(false);
     }
@@ -76,9 +77,9 @@ export default function Mesajlasma() {
 
   return (
     <div style={{ maxWidth: '600px', margin: '50px auto', padding: '20px', fontFamily: 'sans-serif' }}>
-      <Link href="/">
+      <Link href="/mesajlarim">
         <button style={{ marginBottom: '20px', padding: '8px 16px', background: '#6c757d', color: 'white', border: 'none', borderRadius: '5px' }}>
-          ← Ana Sayfa
+          ← Mesajlarım
         </button>
       </Link>
       
