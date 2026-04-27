@@ -15,6 +15,7 @@ export async function GET() {
       return NextResponse.json([]);
     }
 
+    // Kullanıcıyı bul
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
     });
@@ -23,21 +24,25 @@ export async function GET() {
       return NextResponse.json([]);
     }
 
-    const messages = await prisma.message.findMany({
-      where: {
-        receiverId: user.id,
-      },
-      include: {
-        sender: { select: { name: true } },
-        job: { select: { id: true, title: true } }
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 50,
-    });
+    // DOĞRUDAN RAW SQL İLE MESAJLARI AL
+    const messages = await prisma.$queryRaw`
+      SELECT 
+        m.id,
+        m.content,
+        m."isRead",
+        m."createdAt",
+        json_build_object('name', s.name) as sender,
+        json_build_object('id', j.id, 'title', j.title) as job
+      FROM "Message" m
+      JOIN "User" s ON s.id = m."senderId"
+      JOIN "Job" j ON j.id = m."jobId"
+      WHERE m."receiverId" = ${user.id}
+      ORDER BY m."createdAt" DESC
+    `;
 
     return NextResponse.json(messages);
   } catch (error) {
     console.error('Mesaj API hatası:', error);
-    return NextResponse.json([]);
+    return NextResponse.json({ error: 'Bir hata oluştu' }, { status: 500 });
   }
 }
