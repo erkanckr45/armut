@@ -3,6 +3,7 @@
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import NotificationBell from './components/NotificationBell';
 
 interface Category {
   id: string;
@@ -31,9 +32,7 @@ export default function Home() {
       fetch('/api/user/categories')
         .then(res => res.json())
         .then(data => {
-          if (data.length === 0) {
-            setShowWarning(true);
-          }
+          if (data.length === 0) setShowWarning(true);
         });
     }
   }, [session]);
@@ -47,11 +46,9 @@ export default function Home() {
   return (
     <div style={{ fontFamily: 'sans-serif' }}>
       {showWarning && (
-        <div style={{ background: '#fff3cd', color: '#856404', padding: '12px 20px', textAlign: 'center', borderBottom: '1px solid #ffeeba' }}>
+        <div style={{ background: '#fff3cd', color: '#856404', padding: '12px 20px', textAlign: 'center' }}>
           ⚠️ Henüz hizmet kategorisi seçmediniz! 
-          <Link href="/usta/profil" style={{ color: '#856404', fontWeight: 'bold', marginLeft: '10px' }}>
-            Hemen kategorilerinizi seçin →
-          </Link>
+          <Link href="/usta/profil"> Hemen seçin →</Link>
         </div>
       )}
 
@@ -59,7 +56,13 @@ export default function Home() {
         <h1 style={{ color: '#007bff' }}>🚀 Armut Clone</h1>
         
         {session ? (
-          <div>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <NotificationBell />
+            <Link href="/mesajlarim">
+              <button style={{ padding: '8px 16px', background: '#6c757d', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', marginRight: '10px' }}>
+                📬 Mesajlarım
+              </button>
+            </Link>
             <span style={{ marginRight: '15px' }}>Hoş geldin, <strong>{session.user?.name}</strong></span>
             
             <Link href="/profil/goster">
@@ -137,18 +140,18 @@ export default function Home() {
       </div>
 
       <div style={{ textAlign: 'center', padding: '60px 20px', background: '#f0f4f8' }}>
-        <h2 style={{ fontSize: '36px', marginBottom: '20px' }}>Ne arıyorsunuz?</h2>
-        <p style={{ fontSize: '18px', color: '#666' }}>Binlerce güvenilir hizmet veren arasında aradığını bul!</p>
+        <h2>Ne arıyorsunuz?</h2>
+        <p>Binlerce güvenilir hizmet veren arasında aradığını bul!</p>
       </div>
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '50px 20px' }}>
-        <h3 style={{ fontSize: '24px', marginBottom: '30px' }}>Popüler Hizmetler</h3>
+        <h3>Popüler Hizmetler</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '20px' }}>
           {categories.map((cat) => (
             <Link key={cat.id} href={`/kategori/${cat.slug}`} style={{ textDecoration: 'none' }}>
               <div style={{ textAlign: 'center', padding: '25px 15px', background: '#fff', borderRadius: '10px', border: '1px solid #e0e0e0', cursor: 'pointer' }}>
-                <div style={{ fontSize: '40px', marginBottom: '10px' }}>{cat.icon || '📦'}</div>
-                <div style={{ fontWeight: '500', color: '#333' }}>{cat.name}</div>
+                <div style={{ fontSize: '40px' }}>{cat.icon || '📦'}</div>
+                <div>{cat.name}</div>
               </div>
             </Link>
           ))}
