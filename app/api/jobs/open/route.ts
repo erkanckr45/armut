@@ -21,10 +21,10 @@ export async function GET() {
     
     if (user) {
       if (user.role === 'CUSTOMER') {
-        // MÜŞTERİ: Sadece kendi işlerini görür
+        // Müşteri: Kendi işlerini görür (OPEN veya IN_PROGRESS)
         whereCondition = {
-          status: 'OPEN',
-          customerId: user.id
+          customerId: user.id,
+          status: { in: ['OPEN', 'IN_PROGRESS'] }
         };
       } else if (user.role === 'PROVIDER') {
         // USTA: Teklif verdiği işleri GÖRMEZ
