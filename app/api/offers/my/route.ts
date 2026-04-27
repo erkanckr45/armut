@@ -23,13 +23,24 @@ export async function GET() {
     return NextResponse.json({ error: 'Kullanıcı bulunamadı' }, { status: 404 });
   }
 
+  console.log('Kullanıcı ID:', user.id);
+  console.log('Kullanıcı Rol:', user.role);
+
   let offers = [];
 
   if (user.role === 'CUSTOMER') {
-    // Müşteri: Kendi işlerine GELEN teklifler
+    // Müşteri: Job'ları üzerinden teklifleri bul
+    const customerJobs = await prisma.job.findMany({
+      where: { customerId: user.id },
+      select: { id: true }
+    });
+    
+    const jobIds = customerJobs.map(job => job.id);
+    console.log('Müşterinin iş IDleri:', jobIds);
+    
     offers = await prisma.offer.findMany({
       where: {
-        job: { customerId: user.id }
+        jobId: { in: jobIds }
       },
       include: {
         job: true,
@@ -54,5 +65,6 @@ export async function GET() {
     });
   }
 
+  console.log('Bulunan teklif sayısı:', offers.length);
   return NextResponse.json(offers);
 }
