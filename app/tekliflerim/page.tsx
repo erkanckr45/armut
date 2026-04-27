@@ -1,7 +1,7 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useRouter }next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
@@ -21,7 +21,6 @@ export default function Tekliflerim() {
         let teklifler = [];
         
         if (data.jobs && Array.isArray(data.jobs)) {
-          // Her işin içindeki teklifleri topla
           teklifler = data.jobs.flatMap((job: any) => 
             (job.offers || []).map((offer: any) => ({
               ...offer,
