@@ -13,6 +13,7 @@ export default function NotificationBell() {
     try {
       const res = await fetch('/api/messages/unread-count');
       const data = await res.json();
+      console.log('Okunmamış mesaj sayısı:', data.count);
       setUnreadCount(data.count || 0);
     } catch (err) {
       console.error('Bildirim hatası:', err);
