@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 
 export default function Mesajlasma() {
@@ -11,29 +11,64 @@ export default function Mesajlasma() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [sending, setSending] = useState(false);
+
+  const fetchMessages = async () => {
+    try {
+      const res = await fetch(`/api/messages?jobId=${jobId}`);
+      const data = await res.json();
+      setMessages(data);
+      
+      // Okunmamış mesajları işaretle
+      const unreadMessages = data.filter((m: any) => !m.isRead && m.receiverId === session?.user?.id);
+      if (unreadMessages.length > 0) {
+        await fetch('/api/messages/mark-read', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jobId }),
+        });
+      }
+    } catch (err) {
+      console.error('Mesajlar alınamadı:', err);
+    }
+  };
 
   useEffect(() => {
-    fetch(`/api/messages?jobId=${jobId}`)
-      .then(res => res.json())
-      .then(data => {
-        setMessages(data);
-        setLoading(false);
-      });
+    if (!jobId) return;
+    
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 3000); // 3 saniyede bir yenile
+    return () => clearInterval(interval);
   }, [jobId]);
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    setLoading(false);
+  }, [messages]);
+
   const sendMessage = async () => {
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || sending) return;
+    
+    setSending(true);
+    try {
+      const res = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobId, content: newMessage }),
+      });
 
-    const res = await fetch('/api/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ jobId, content: newMessage }),
-    });
-
-    if (res.ok) {
-      const message = await res.json();
-      setMessages([...messages, message]);
-      setNewMessage('');
+      if (res.ok) {
+        setNewMessage('');
+        await fetchMessages();
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Mesaj gönderilemedi');
+      }
+    } catch (err) {
+      console.error('Mesaj gönderme hatası:', err);
+    } finally {
+      setSending(false);
     }
   };
 
@@ -60,6 +95,7 @@ export default function Mesajlasma() {
             </div>
           </div>
         ))}
+        <div ref={messagesEndRef} />
       </div>
       
       <div style={{ display: 'flex', gap: '10px' }}>
@@ -67,12 +103,17 @@ export default function Mesajlasma() {
           type="text"
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+          onKeyPress={(e) => e.key === 'Enter' && !sending && sendMessage()}
           placeholder="Mesajınızı yazın..."
+          disabled={sending}
           style={{ flex: 1, padding: '10px', border: '1px solid #ccc', borderRadius: '5px' }}
         />
-        <button onClick={sendMessage} style={{ padding: '10px 20px', background: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-          Gönder
+        <button 
+          onClick={sendMessage} 
+          disabled={sending}
+          style={{ padding: '10px 20px', background: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: sending ? 'not-allowed' : 'pointer' }}
+        >
+          {sending ? 'Gönderiliyor...' : 'Gönder'}
         </button>
       </div>
     </div>

@@ -3,9 +3,11 @@
 import { useSession } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export default function NotificationBell() {
   const { data: session } = useSession();
+  const pathname = usePathname();
   const [unreadCount, setUnreadCount] = useState(0);
 
   const fetchUnreadCount = async () => {
@@ -21,11 +23,12 @@ export default function NotificationBell() {
 
   useEffect(() => {
     fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 5000);
+    const interval = setInterval(fetchUnreadCount, 3000); // 3 saniyede bir kontrol
     return () => clearInterval(interval);
   }, [session]);
 
-  if (!session) return null;
+  // Mesajlar sayfasındayken bildirim simgesini gizleme
+  if (!session || pathname === '/mesajlarim') return null;
 
   return (
     <Link href="/mesajlarim" style={{ position: 'relative', marginRight: '15px', textDecoration: 'none', display: 'inline-block' }}>
@@ -37,7 +40,7 @@ export default function NotificationBell() {
         position: 'relative',
         padding: '5px 10px'
       }}>
-        💬
+        🔔
         {unreadCount > 0 && (
           <span style={{
             position: 'absolute',
