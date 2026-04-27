@@ -23,35 +23,33 @@ export async function GET() {
     return NextResponse.json({ error: 'Kullanıcı bulunamadı' }, { status: 404 });
   }
 
-  console.log('Kullanıcı ID:', user.id);
-  console.log('Kullanıcı Rol:', user.role);
-
   let offers = [];
 
   if (user.role === 'CUSTOMER') {
-    // Müşteri: Job'ları üzerinden teklifleri bul
-    const customerJobs = await prisma.job.findMany({
-      where: { customerId: user.id },
-      select: { id: true }
-    });
+    // Raw SQL ile teklifleri getir
+    const result = await prisma.$queryRaw`
+      SELECT 
+        o.id,
+        o.price,
+        o.message,
+        o.status,
+        o."createdAt",
+        json_build_object('id', j.id, 'title', j.title, 'description', j.description) as job,
+        json_build_object('id', p.id, 'name', p.name, 'email', p.email) as provider
+      FROM "Offer" o
+      JOIN "Job" j ON j.id = o."jobId"
+      JOIN "User" p ON p.id = o."providerId"
+      WHERE j."customerId" = ${user.id}
+      ORDER BY o."createdAt" DESC
+    `;
     
-    const jobIds = customerJobs.map(job => job.id);
-    console.log('Müşterinin iş IDleri:', jobIds);
-    
-    offers = await prisma.offer.findMany({
-      where: {
-        jobId: { in: jobIds }
-      },
-      include: {
-        job: true,
-        provider: { 
-          select: { id: true, name: true, email: true } 
-        }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
+    // JSON alanlarını parse et
+    offers = (result as any[]).map(row => ({
+      ...row,
+      job: typeof row.job === 'string' ? JSON.parse(row.job) : row.job,
+      provider: typeof row.provider === 'string' ? JSON.parse(row.provider) : row.provider
+    }));
   } else {
-    // Usta: VERDİĞİ teklifler
     offers = await prisma.offer.findMany({
       where: { providerId: user.id },
       include: {
@@ -65,6 +63,5 @@ export async function GET() {
     });
   }
 
-  console.log('Bulunan teklif sayısı:', offers.length);
   return NextResponse.json(offers);
 }
