@@ -33,7 +33,9 @@ export async function GET() {
       },
       include: {
         job: true,
-        provider: { select: { id: true, name: true, email: true } }
+        provider: { 
+          select: { id: true, name: true, email: true } 
+        }
       },
       orderBy: { createdAt: 'desc' }
     });
