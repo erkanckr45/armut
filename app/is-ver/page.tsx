@@ -3,9 +3,9 @@
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 
-export default function IsVer() {
+function IsVerForm() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -75,16 +75,7 @@ export default function IsVer() {
   };
 
   return (
-    <div style={{ maxWidth: '600px', margin: '50px auto', padding: '20px', fontFamily: 'sans-serif' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1>📝 İş Ver</h1>
-        <Link href="/">
-          <button style={{ padding: '8px 16px', background: '#6c757d', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-            🏠 Ana Sayfa
-          </button>
-        </Link>
-      </div>
-      
+    <>
       {message && <p style={{ color: message.includes('✅') ? 'green' : 'red' }}>{message}</p>}
       
       <form onSubmit={handleSubmit}>
@@ -151,6 +142,25 @@ export default function IsVer() {
           {loading ? 'Oluşturuluyor...' : 'İş Ver'}
         </button>
       </form>
+    </>
+  );
+}
+
+export default function IsVer() {
+  return (
+    <div style={{ maxWidth: '600px', margin: '50px auto', padding: '20px', fontFamily: 'sans-serif' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h1>📝 İş Ver</h1>
+        <Link href="/">
+          <button style={{ padding: '8px 16px', background: '#6c757d', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+            🏠 Ana Sayfa
+          </button>
+        </Link>
+      </div>
+      
+      <Suspense fallback={<div>Yükleniyor...</div>}>
+        <IsVerForm />
+      </Suspense>
     </div>
   );
 }
