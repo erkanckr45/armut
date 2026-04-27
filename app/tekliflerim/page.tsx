@@ -16,26 +16,22 @@ export default function Tekliflerim() {
     fetch('/api/offers/my')
       .then(res => res.json())
       .then(data => {
-        console.log('Gelen veri:', data);
-        
         let teklifler = [];
-        
         if (data.jobs && Array.isArray(data.jobs)) {
           teklifler = data.jobs.flatMap((job: any) => 
             (job.offers || []).map((offer: any) => ({
               ...offer,
-              job: { id: job.id, title: job.title, description: job.description }
+              job: { id: job.id, title: job.title, description: job.description, status: job.status }
             }))
           );
         } else if (Array.isArray(data)) {
           teklifler = data;
         }
-        
         setOffers(teklifler);
         setLoading(false);
       })
       .catch(err => {
-        console.error('Hata:', err);
+        console.error(err);
         setOffers([]);
         setLoading(false);
       });
@@ -102,9 +98,18 @@ export default function Tekliflerim() {
               ✅ Teklifi Kabul Et
             </button>
           )}
+          
           {offer.status === 'ACCEPTED' && (
-            <p style={{ color: 'green', marginTop: '10px' }}>✅ Bu teklif kabul edildi. Artık mesajlaşabilirsiniz.</p>
+            <div>
+              <p style={{ color: 'green', marginTop: '10px' }}>✅ Bu teklif kabul edildi. Artık mesajlaşabilirsiniz.</p>
+              <Link href="/isler">
+                <button style={{ marginTop: '10px', padding: '8px 16px', background: '#17a2b8', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+                  💬 Mesaj Gönder
+                </button>
+              </Link>
+            </div>
           )}
+          
           {offer.status === 'REJECTED' && (
             <p style={{ color: 'red', marginTop: '10px' }}>❌ Bu teklif reddedildi.</p>
           )}
