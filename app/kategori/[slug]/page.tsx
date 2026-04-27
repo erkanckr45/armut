@@ -1,6 +1,7 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
+import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
@@ -15,41 +16,35 @@ interface Job {
   createdAt: string;
 }
 
-export default function KategoriSayfasi({ params }: { params: Promise<{ slug: string }> }) {
-  const [slug, setSlug] = useState<string | null>(null);
+export default function KategoriSayfasi() {
+  const { slug } = useParams();
   const { data: session } = useSession();
   const [category, setCategory] = useState<any>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // params Promise'ini çöz
-    params.then((resolved) => {
-      setSlug(resolved.slug);
-    });
-  }, [params]);
-
-  useEffect(() => {
-    if (!slug) return;
-    
-    fetch(`/api/categories/${slug}`)
-      .then(res => res.json())
-      .then(data => {
-        setCategory(data.category);
-        setJobs(data.jobs || []);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setLoading(false);
-      });
+    if (slug) {
+      fetch(`/api/categories/${slug}`)
+        .then(res => res.json())
+        .then(data => {
+          setCategory(data.category);
+          setJobs(data.jobs || []);
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error(err);
+          setLoading(false);
+        });
+    }
   }, [slug]);
 
   if (loading) return <div style={{ textAlign: 'center', padding: '50px' }}>Yükleniyor...</div>;
-  if (!category) return <div>Kategori bulunamadı: {slug}</div>;
+  if (!category) return <div>Kategori bulunamadı</div>;
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px', fontFamily: 'sans-serif' }}>
+      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', paddingBottom: '20px', borderBottom: '1px solid #ddd' }}>
         <h1>{category.icon} {category.name}</h1>
         <Link href="/">
@@ -59,6 +54,7 @@ export default function KategoriSayfasi({ params }: { params: Promise<{ slug: st
         </Link>
       </div>
 
+      {/* İş İlanları */}
       <h2>Bu kategorideki işler</h2>
       {jobs.length === 0 ? (
         <p>Henüz bu kategoride iş ilanı yok. İlk iş ilanını sen ver!</p>
@@ -77,8 +73,9 @@ export default function KategoriSayfasi({ params }: { params: Promise<{ slug: st
         </div>
       )}
 
+      {/* İş Ver Butonu - Kategori ID'sini parametre olarak gönderiyor */}
       {session && (
-        <Link href="/is-ver">
+        <Link href={`/is-ver?kategori=${category.id}`}>
           <button style={{ marginTop: '30px', padding: '12px 24px', background: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '16px' }}>
             + Bu Kategoride İş Ver
           </button>

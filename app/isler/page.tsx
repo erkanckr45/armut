@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import MessageModal from '../components/MessageModal';
 
 interface Job {
   id: string;
@@ -12,7 +13,7 @@ interface Job {
   district: string;
   budget: number | null;
   category: { icon: string; name: string };
-  customer: { name: string; email: string };
+  customer: { id: string; name: string; email: string };
 }
 
 export default function Isler() {
@@ -23,6 +24,7 @@ export default function Isler() {
   const [offerPrice, setOfferPrice] = useState<Record<string, string>>({});
   const [offerMessage, setOfferMessage] = useState<Record<string, string>>({});
   const [message, setMessage] = useState('');
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/jobs/open')
@@ -59,15 +61,24 @@ export default function Isler() {
       }),
     });
 
+    const data = await res.json();
+
     if (res.ok) {
       setMessage('✅ Teklifiniz gönderildi!');
       setOfferPrice({ ...offerPrice, [jobId]: '' });
       setOfferMessage({ ...offerMessage, [jobId]: '' });
       setTimeout(() => setMessage(''), 3000);
     } else {
-      const data = await res.json();
       setMessage(`❌ ${data.error || 'Teklif gönderilemedi'}`);
     }
+  };
+
+  const isOwnJob = (job: Job) => {
+    return job.customer?.email === session.user?.email;
+  };
+
+  const isProvider = () => {
+    return session.user?.role === 'PROVIDER';
   };
 
   return (
@@ -86,22 +97,23 @@ export default function Isler() {
           <p><strong>📂 Kategori:</strong> {job.category?.icon} {job.category?.name}</p>
           <p><strong>👤 İlan Sahibi:</strong> {job.customer?.name}</p>
           
-          {session.user?.role === 'PROVIDER' && (
+          {/* Teklif Verme Bölümü - Sadece Ustalar için ve kendi işi DEĞİLSE */}
+          {isProvider() && !isOwnJob(job) && (
             <div style={{ marginTop: '15px', borderTop: '1px solid #ccc', paddingTop: '15px' }}>
-              <h4>Teklif Ver</h4>
+              <h4>📝 Teklif Ver</h4>
               <input 
                 type="number" 
                 placeholder="Fiyat (₺)" 
                 value={offerPrice[job.id] || ''}
                 onChange={(e) => setOfferPrice(prev => ({ ...prev, [job.id]: e.target.value }))}
-                style={{ padding: '8px', marginRight: '10px', width: '150px' }}
+                style={{ padding: '8px', marginRight: '10px', width: '150px', border: '1px solid #ccc', borderRadius: '5px' }}
               />
               <input 
                 type="text" 
-                placeholder="Mesajınız" 
+                placeholder="Teklif mesajınız" 
                 value={offerMessage[job.id] || ''}
                 onChange={(e) => setOfferMessage(prev => ({ ...prev, [job.id]: e.target.value }))}
-                style={{ padding: '8px', marginRight: '10px', width: '250px' }}
+                style={{ padding: '8px', marginRight: '10px', width: '250px', border: '1px solid #ccc', borderRadius: '5px' }}
               />
               <button 
                 onClick={() => handleTeklifVer(job.id)} 
@@ -110,8 +122,25 @@ export default function Isler() {
               </button>
             </div>
           )}
+
+          {/* Mesajlaşma Butonu - Sadece başkasının işinde göster */}
+          {!isOwnJob(job) && (
+            <div style={{ marginTop: '15px', textAlign: 'right' }}>
+              <button
+                onClick={() => setSelectedJobId(job.id)}
+                style={{ padding: '8px 16px', background: '#17a2b8', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+              >
+                💬 Mesaj Gönder
+              </button>
+            </div>
+          )}
         </div>
       ))}
+
+      {/* Mesaj Modal'ı */}
+      {selectedJobId && (
+        <MessageModal jobId={selectedJobId} onClose={() => setSelectedJobId(null)} />
+      )}
     </div>
   );
 }

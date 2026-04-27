@@ -39,12 +39,16 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   
+  // İlişkiler
   jobs          Job[]
   offers        Offer[]
   sentMessages  Message[] @relation("Sender")
   receivedMessages Message[] @relation("Receiver")
   reviewsGiven  Review[]  @relation("Reviewer")
   reviewsReceived Review[] @relation("Reviewed")
+  
+  // Kategoriler ile çoka-çok ilişki (Ustalar için)
+  categories    Category[] @relation("UserCategories")
 }
 
 model Category {
@@ -57,6 +61,9 @@ model Category {
   children    Category[]  @relation("CategoryToCategory")
   jobs        Job[]
   createdAt   DateTime    @default(now())
+  
+  // Ustalar (bu kategoride hizmet verenler)
+  users       User[]      @relation("UserCategories")
 }
 
 model Job {

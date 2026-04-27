@@ -8,25 +8,34 @@ export default function Kayit() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('CUSTOMER');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
     const res = await fetch('/api/kayit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, email, password, role }),
     });
 
     const data = await res.json();
 
     if (res.ok) {
+      if (data.role === 'PROVIDER') {
+        alert('🎉 Kayıt başarılı! Lütfen giriş yapın ve profil sayfanızdan hizmet vereceğiniz kategorileri seçin.');
+      } else {
+        alert('✅ Kayıt başarılı! Şimdi giriş yapabilirsiniz.');
+      }
       router.push('/giris');
     } else {
       setError(data.error || 'Kayıt başarısız');
     }
+    setLoading(false);
   };
 
   return (
@@ -63,8 +72,33 @@ export default function Kayit() {
           style={{ padding: '10px', border: '1px solid #ccc', borderRadius: '5px' }}
         />
         
-        <button type="submit" style={{ padding: '10px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-          Kayıt Ol
+        <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <input
+              type="radio"
+              value="CUSTOMER"
+              checked={role === 'CUSTOMER'}
+              onChange={(e) => setRole(e.target.value)}
+            />
+            Müşteri (İş Verecek)
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <input
+              type="radio"
+              value="PROVIDER"
+              checked={role === 'PROVIDER'}
+              onChange={(e) => setRole(e.target.value)}
+            />
+            Usta (Hizmet Verecek)
+          </label>
+        </div>
+        
+        <button 
+          type="submit" 
+          disabled={loading}
+          style={{ padding: '10px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+        >
+          {loading ? 'Kaydediliyor...' : 'Kayıt Ol'}
         </button>
         
         <p style={{ textAlign: 'center', marginTop: '10px' }}>

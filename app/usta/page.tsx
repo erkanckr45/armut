@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 export default function Usta() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -26,12 +26,26 @@ export default function Usta() {
 
     if (res.ok) {
       setMessage('✅ Tebrikler! Artık hizmet veren (usta) oldunuz!');
-      setTimeout(() => router.refresh(), 2000);
+      await update(); // Session'ı güncelle
+      setTimeout(() => router.push('/'), 2000);
     } else {
       setMessage('❌ Bir hata oluştu');
     }
     setLoading(false);
   };
+
+  // Eğer zaten ustaysa, mesaj göster ve yönlendir
+  if (session.user?.role === 'PROVIDER') {
+    return (
+      <div style={{ maxWidth: '600px', margin: '50px auto', padding: '20px', fontFamily: 'sans-serif', textAlign: 'center' }}>
+        <h1>🛠️ Zaten Ustasınız!</h1>
+        <p>Hesabınız zaten hizmet veren (usta) olarak kayıtlı.</p>
+        <button onClick={() => router.push('/')} style={{ padding: '12px 24px', background: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+          Ana Sayfaya Dön
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ maxWidth: '600px', margin: '50px auto', padding: '20px', fontFamily: 'sans-serif', textAlign: 'center' }}>
