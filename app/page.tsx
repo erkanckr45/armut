@@ -98,8 +98,13 @@ export default function Home() {
             
             {userRole === 'PROVIDER' && (
               <>
-                <Link href="/isler">
+                <Link href="/aktif-islerim">
                   <button style={{ padding: '8px 16px', background: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', marginRight: '10px' }}>
+                    📋 Aktif İşlerim
+                  </button>
+                </Link>
+                <Link href="/isler">
+                  <button style={{ padding: '8px 16px', background: '#17a2b8', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', marginRight: '10px' }}>
                     📋 Açık İşler
                   </button>
                 </Link>
