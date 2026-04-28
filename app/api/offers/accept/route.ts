@@ -17,6 +17,16 @@ export async function POST(request: Request) {
   const { offerId, jobId } = await request.json();
 
   try {
+    // Teklifi bul (usta bilgisi için)
+    const offer = await prisma.offer.findUnique({
+      where: { id: offerId },
+      include: { provider: true, job: true }
+    });
+
+    if (!offer) {
+      return NextResponse.json({ error: 'Teklif bulunamadı' }, { status: 404 });
+    }
+
     // Önce diğer teklifleri reddet
     await prisma.offer.updateMany({
       where: { jobId, status: 'PENDING' },
@@ -35,8 +45,20 @@ export async function POST(request: Request) {
       data: { status: 'IN_PROGRESS' },
     });
 
-    return NextResponse.json({ message: 'Teklif kabul edildi' });
+    // Ustaya bildirim oluştur (mesaj olarak)
+    await prisma.message.create({
+      data: {
+        content: `🎉 Tebrikler! "${offer.job.title}" işi için teklifiniz KABUL EDİLDİ. Artık müşteri ile mesajlaşabilirsiniz.`,
+        jobId: jobId,
+        senderId: offer.job.customerId,
+        receiverId: offer.providerId,
+        isRead: false,
+      },
+    });
+
+    return NextResponse.json({ message: '✅ Teklif kabul edildi! Ustaya bildirim gönderildi.' });
   } catch (error) {
+    console.error('Teklif kabul hatası:', error);
     return NextResponse.json({ error: 'Bir hata oluştu' }, { status: 500 });
   }
 }
