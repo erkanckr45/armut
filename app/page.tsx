@@ -16,6 +16,7 @@ export default function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [unreadOfferCount, setUnreadOfferCount] = useState(0);
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
 
   useEffect(() => {
     fetch('/api/categories')
@@ -26,13 +27,24 @@ export default function Home() {
       });
   }, []);
 
-  // Bildirim sayısını kontrol et
+  // Müşteri için okunmamış teklif sayısı
   useEffect(() => {
     if (session?.user?.role === 'CUSTOMER') {
       fetch('/api/offers/unread')
         .then(res => res.json())
         .then(data => {
           setUnreadOfferCount(data.count || 0);
+        });
+    }
+  }, [session]);
+
+  // Usta için okunmamış mesaj sayısı
+  useEffect(() => {
+    if (session?.user?.role === 'PROVIDER') {
+      fetch('/api/messages/unread')
+        .then(res => res.json())
+        .then(data => {
+          setUnreadMessageCount(data.count || 0);
         });
     }
   }, [session]);
@@ -98,8 +110,23 @@ export default function Home() {
                   </button>
                 </Link>
                 <Link href="/isler">
-                  <button style={{ padding: '8px 16px', background: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', marginRight: '10px' }}>
+                  <button style={{ padding: '8px 16px', background: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', marginRight: '10px', position: 'relative' }}>
                     📋 Açık İşler
+                    {unreadMessageCount > 0 && (
+                      <span style={{
+                        position: 'absolute',
+                        top: '-5px',
+                        right: '-5px',
+                        background: 'red',
+                        color: 'white',
+                        borderRadius: '50%',
+                        padding: '2px 6px',
+                        fontSize: '10px',
+                        fontWeight: 'bold'
+                      }}>
+                        {unreadMessageCount}
+                      </span>
+                    )}
                   </button>
                 </Link>
                 <Link href="/tekliflerim">
