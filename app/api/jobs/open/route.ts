@@ -21,13 +21,13 @@ export async function GET() {
     
     if (user) {
       if (user.role === 'CUSTOMER') {
-        // Müşteri: Kendi işlerini görür (OPEN veya IN_PROGRESS)
+        // MÜŞTERİ: Sadece kendi işlerini görür
         whereCondition = {
-          customerId: user.id,
-          status: { in: ['OPEN', 'IN_PROGRESS'] }
+          status: 'OPEN',
+          customerId: user.id
         };
       } else if (user.role === 'PROVIDER') {
-        // USTA: Teklif verdiği işleri GÖRMEZ
+        // USTA: Teklif VERDİĞİ işleri GÖRMEZ, diğerlerini görür
         const offeredJobs = await prisma.offer.findMany({
           where: { providerId: user.id },
           select: { jobId: true }
@@ -35,11 +35,12 @@ export async function GET() {
         const offeredJobIds = offeredJobs.map(o => o.jobId);
         
         const userCategoryIds = user.categories.map(c => c.id);
+        
         if (userCategoryIds.length > 0) {
           whereCondition = {
             status: 'OPEN',
             categoryId: { in: userCategoryIds },
-            id: { not: { in: offeredJobIds } }
+            ...(offeredJobIds.length > 0 && { id: { not: { in: offeredJobIds } } })
           };
         } else {
           return NextResponse.json([]);
