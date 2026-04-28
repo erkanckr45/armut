@@ -134,6 +134,11 @@ export default function Home() {
                     📋 Verdiğim Teklifler
                   </button>
                 </Link>
+                <Link href="/kazandigim-isler">
+                  <button style={{ padding: '8px 16px', background: '#4caf50', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', marginRight: '10px' }}>
+                    🏆 Kazandığım İşler
+                  </button>
+                </Link>
               </>
             )}
             
