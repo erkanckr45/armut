@@ -35,19 +35,18 @@ model User {
   role          Role      @default(CUSTOMER)
   image         String?
   bio           String?
+  city          String?
+  district      String?
   workingAreas  String[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   
-  // İlişkiler
   jobs          Job[]
   offers        Offer[]
   sentMessages  Message[] @relation("Sender")
   receivedMessages Message[] @relation("Receiver")
   reviewsGiven  Review[]  @relation("Reviewer")
   reviewsReceived Review[] @relation("Reviewed")
-  
-  // Kategoriler ile çoka-çok ilişki (Ustalar için)
   categories    Category[] @relation("UserCategories")
 }
 
@@ -61,8 +60,7 @@ model Category {
   children    Category[]  @relation("CategoryToCategory")
   jobs        Job[]
   createdAt   DateTime    @default(now())
-  
-  // Ustalar (bu kategoride hizmet verenler)
+  isRemote    Boolean     @default(false)
   users       User[]      @relation("UserCategories")
 }
 
@@ -90,6 +88,7 @@ model Offer {
   price       Float
   message     String
   status      OfferStatus @default(PENDING)
+  isRead      Boolean     @default(false)
   jobId       String
   job         Job         @relation(fields: [jobId], references: [id])
   providerId  String
