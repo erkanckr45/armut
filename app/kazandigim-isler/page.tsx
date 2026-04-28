@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import MessageModal from '../components/MessageModal';
 
 interface WonJob {
   id: string;
@@ -23,6 +24,7 @@ export default function KazandigimIsler() {
   const router = useRouter();
   const [jobs, setJobs] = useState<WonJob[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/jobs/won')
@@ -62,13 +64,20 @@ export default function KazandigimIsler() {
           <p><strong>📂 Kategori:</strong> {job.category?.icon} {job.category?.name}</p>
           <p><strong>👤 İlan Sahibi:</strong> {job.customer?.name}</p>
           
-          <Link href={`/isler?jobId=${job.id}`}>
-            <button style={{ marginTop: '15px', padding: '8px 16px', background: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-              💬 Mesaj Gönder
-            </button>
-          </Link>
+          {/* Mesaj Gönder Butonu - Modal açar */}
+          <button 
+            onClick={() => setSelectedJobId(job.id)}
+            style={{ marginTop: '15px', padding: '8px 16px', background: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+          >
+            💬 Mesaj Gönder
+          </button>
         </div>
       ))}
+
+      {/* Mesaj Modal'ı */}
+      {selectedJobId && (
+        <MessageModal jobId={selectedJobId} onClose={() => setSelectedJobId(null)} />
+      )}
     </div>
   );
 }
