@@ -9,41 +9,31 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 export async function GET() {
-  try {
-    const session = await getServerSession();
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Giriş yapmalısınız' }, { status: 401 });
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { id: true, role: true }
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: 'Kullanıcı bulunamadı' }, { status: 404 });
-    }
-
-    // GEÇİCİ: Doğrudan müşterinin işlerini ve tekliflerini döndürelim
-    const customerJobs = await prisma.job.findMany({
-      where: { customerId: user.id },
-      include: {
-        offers: {
-          include: {
-            provider: {
-              select: { name: true, email: true }
-            }
-          }
-        }
-      }
-    });
-
-    return NextResponse.json({
-      user: { id: user.id, role: user.role },
-      jobs: customerJobs
-    });
-  } catch (error) {
-    console.error('API hatası:', error);
-    return NextResponse.json({ error: 'Sunucu hatası', details: String(error) }, { status: 500 });
+  const session = await getServerSession();
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: 'Giriş yapmalısınız' }, { status: 401 });
   }
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: { id: true, role: true }
+  });
+
+  if (!user) {
+    return NextResponse.json({ error: 'Kullanıcı bulunamadı' }, { status: 404 });
+  }
+
+  // MÜŞTERİ: Kendi işlerine GELEN teklifler
+  const offers = await prisma.offer.findMany({
+    where: {
+      job: { customerId: user.id }
+    },
+    include: {
+      job: true,
+      provider: { select: { id: true, name: true, email: true } }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  return NextResponse.json(offers);
 }
