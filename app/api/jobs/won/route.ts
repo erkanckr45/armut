@@ -23,7 +23,6 @@ export async function GET() {
     return NextResponse.json({ error: 'Kullanıcı bulunamadı' }, { status: 404 });
   }
 
-  // Kabul edilen teklifleri getir
   const acceptedOffers = await prisma.offer.findMany({
     where: {
       providerId: user.id,
